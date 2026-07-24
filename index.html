@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulacro de Ciberseguridad</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#060907;
+    --bg-panel:#0b120d;
+    --green:#39ff6a;
+    --green-dim:#1f8a45;
+    --green-faint:#0f3d20;
+    --text:#c9f5d4;
+    --text-dim:#6f9a7d;
+    --red:#ff4d4d;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    overflow-x:hidden;
+  }
+  body{
+    position:relative;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:32px 18px 60px;
+  }
+  /* scanlines */
+  body::before{
+    content:"";
+    position:fixed; inset:0;
+    background:repeating-linear-gradient(
+      to bottom,
+      rgba(57,255,106,0.035) 0px,
+      rgba(57,255,106,0.035) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+    pointer-events:none;
+    z-index:5;
+  }
+  body::after{
+    content:"";
+    position:fixed; inset:0;
+    background:radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.55) 100%);
+    pointer-events:none;
+    z-index:4;
+  }
+
+  .terminal{
+    width:100%;
+    max-width:640px;
+    border:1px solid var(--green-dim);
+    background:var(--bg-panel);
+    box-shadow:0 0 40px rgba(57,255,106,0.08), inset 0 0 60px rgba(57,255,106,0.02);
+    position:relative;
+    z-index:10;
+  }
+  .titlebar{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:10px 14px;
+    border-bottom:1px solid var(--green-faint);
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    color:var(--text-dim);
+    letter-spacing:0.5px;
+  }
+  .dot{width:9px;height:9px;border-radius:50%;background:var(--green-faint);}
+  .titlebar span.path{margin-left:6px;}
+
+  .body-inner{padding:28px 26px 32px;}
+
+  .status-line{
+    font-family:'JetBrains Mono',monospace;
+    font-size:13px;
+    color:var(--green-dim);
+    margin-bottom:18px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .status-line .blink{
+    width:8px;height:14px;background:var(--green);
+    animation:blink 1s steps(2) infinite;
+  }
+  @keyframes blink{50%{opacity:0;}}
+
+  h1{
+    font-family:'JetBrains Mono',monospace;
+    font-weight:800;
+    font-size:clamp(22px,5vw,30px);
+    color:var(--green);
+    text-shadow:0 0 18px rgba(57,255,106,0.35);
+    line-height:1.25;
+    margin-bottom:6px;
+    letter-spacing:0.5px;
+  }
+  h1 .warn{color:var(--red); text-shadow:0 0 18px rgba(255,77,77,0.4);}
+
+  .subtitle{
+    font-family:'JetBrains Mono',monospace;
+    font-size:13px;
+    color:var(--text-dim);
+    margin-bottom:26px;
+  }
+
+  p{font-size:15px; line-height:1.65; color:var(--text); margin-bottom:16px;}
+  strong{color:var(--green); font-weight:600;}
+
+  .divider{
+    border:none;
+    border-top:1px dashed var(--green-faint);
+    margin:24px 0;
+  }
+
+  .log{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12.5px;
+    background:#040604;
+    border:1px solid var(--green-faint);
+    padding:14px 16px;
+    color:var(--green-dim);
+    margin:18px 0 22px;
+    line-height:1.8;
+    overflow-x:auto;
+  }
+  .log .ok{color:var(--green);}
+  .log .flag{color:var(--red);}
+
+  h2{
+    font-family:'JetBrains Mono',monospace;
+    font-size:14px;
+    color:var(--green);
+    letter-spacing:1px;
+    text-transform:uppercase;
+    margin:6px 0 12px;
+  }
+
+  ul{list-style:none; margin-bottom:6px;}
+  li{
+    font-size:14.5px;
+    line-height:1.6;
+    padding-left:22px;
+    position:relative;
+    margin-bottom:10px;
+    color:var(--text);
+  }
+  li::before{
+    content:">";
+    position:absolute; left:0;
+    color:var(--green-dim);
+    font-family:'JetBrains Mono',monospace;
+  }
+
+  .cta{
+    margin-top:30px;
+    padding:20px;
+    border:1px solid var(--green);
+    background:linear-gradient(180deg, rgba(57,255,106,0.07), rgba(57,255,106,0.02));
+    text-align:center;
+  }
+  .cta p{margin-bottom:4px; color:var(--text);}
+  .cta .stand{
+    font-family:'JetBrains Mono',monospace;
+    font-weight:700;
+    font-size:17px;
+    color:var(--green);
+    margin-top:6px;
+    letter-spacing:0.5px;
+  }
+
+  footer{
+    margin-top:22px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    color:var(--text-dim);
+    text-align:center;
+    max-width:640px;
+    z-index:10;
+    line-height:1.6;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .blink{animation:none; opacity:1;}
+  }
+</style>
+</head>
+<body>
+
+  <div class="terminal">
+    <div class="titlebar">
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+      <span class="path">sistema@colegio:~/simulacro-qr</span>
+    </div>
+    <div class="body-inner">
+      <div class="status-line"><span class="blink"></span> CONEXIÓN INTERCEPTADA — SOLO SIMULACRO</div>
+
+      <h1>Este era un <span class="warn">QR malicioso</span>.<br>Acabas de caer en él.</h1>
+
+      <p>Escaneaste un código que prometía <strong>"Internet Gratis"</strong>. En un ataque real, esa misma pantalla podría haber:</p>
+
+      <div class="log">
+        > accediendo a cámara.......... <span class="flag">[bloqueado en demo]</span><br>
+        > accediendo a ubicación....... <span class="flag">[bloqueado en demo]</span><br>
+        > instalando perfil de red..... <span class="flag">[bloqueado en demo]</span><br>
+        > enviando datos a servidor.... <span class="ok">[demo finalizada]</span>
+      </div>
+
+      <p>Esta técnica se llama <strong>"quishing"</strong> (phishing con código QR). Funciona porque el QR oculta la URL real hasta que ya escaneaste: no sabes a dónde vas hasta que llegas.</p>
+
+      <hr class="divider">
+
+      <h2>Cómo protegerte</h2>
+      <ul>
+        <li>Desconfía de QR que ofrecen algo demasiado bueno (wifi gratis, premios, descuentos).</li>
+        <li>Antes de tocar el enlace, revisa la URL que muestra tu teléfono al escanear.</li>
+        <li>No ingreses contraseñas ni datos personales en páginas a las que llegaste por QR.</li>
+        <li>Si el QR está en un lugar público sin dueño claro, no lo escanees.</li>
+      </ul>
+
+      <div class="cta">
+        <p>¿Quieres ver cómo se ve un ataque real y cómo detectarlo?</p>
+        <div class="stand">📍 Visítanos en el stand de Ciberseguridad</div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    Actividad educativa organizada por el Departamento de Ciberseguridad — ningún dato real fue recolectado en este simulacro.
+  </footer>
+
+</body>
+</html>
